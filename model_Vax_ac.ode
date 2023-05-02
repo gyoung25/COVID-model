@@ -1,0 +1,52 @@
+#Here susceptibles are split into vaccinated (V) and unvaccinated (X) classes
+#individuals in X have the same dynamics as S but have "chosen" to not get vaccinated
+#vaccinated individuals have a reduced rate of infection
+#here we assume unvaccinated and vaccinated individuals still enter lockdown the same as susceptibles into classes R1X and R1V, respectively
+#vaccinated individuals who become exposed enter class EV. This way we can have them become pre-symptomatic at a reduced rate
+#NOT INCLUDED: vaccinated individuals who become sick do not have a decreased chance to hav a severe infection
+
+#phi is the proportion who choose to get vaccinated
+#mu is the rate of vaccination -- proxy for availability
+#xi is the efficacy of the vaccine
+#rhoV is probability that exposed, vaccinated individuals are asymptomatic. In general rhoV>=rho.
+
+
+S'=-(1-a*c)*beta*S*(Ia+Ip+Im)-mu*S
+X'=mu*(1-phi)*S-(1-a*c)*beta*X*(Ia+Ip+Im)
+V'=mu*phi*S-(1-xi)*(1-a*c)*beta*V*(Ia+Ip+Im)
+
+E'=(1-a*c)*beta*(Ia+Ip+Im)*(S+X+(1-xi)*V)-sigma*E
+
+Ia'=sigma*rho*E-gammaA*Ia
+
+Ip'=sigma*(1-rho)*E-delta1*Ip
+Im'=delta1*Ip-x1*delta2*Im-(1-x1)*gammaM*Im
+Ih'=x1*delta2*Im-x2*delta3*Ih-(1-x2)*gammaH*Ih
+Ic'=x2*delta3*Ih-(1-x3)*gammaC*Ic-x3*m*Ic
+
+D1'=x3*m*Ic
+
+R2'=gammaA*Ia+(1-x1)*gammaM*Im+(1-x2)*gammaH*Ih+(1-x3)*gammaC*Ic
+
+#Iall'=Ia+Ip+Im+Ih+Ic
+#Isymp'=Ip+Im+Ih+Ic
+Etot'=E*sigma
+
+init s=.99,e=.01
+
+#aux tot=s+x+v+e+ev+ia+ip+im+ih+ic+d1+r2
+
+Rt(S,X,V)=(1-a*c)*beta*(S+X+(1-xi)*V)*((1-rho)/delta1+(1-rho)/((1-x1)*gammaM+x1*delta2)+rho/gammaA)
+aux Rt=Rt(S,X,V)
+
+#a is the percentage of pop abiding by social measures
+#c is the  efficacy of social measures
+par phi=0,xi=0,mu=1,a=0,c=0.65
+par beta=0.76,sigma=0.32,rho=0.37,gammaA=.23
+par gammaM=.23,gammaH=.22,gammaC=.23,delta1=0.69
+par delta2=.15,delta3=.55,m=.17,x1=.18
+par x2=.25,x3=.51
+
+@ total=100,xlo=0,xhi=100,ylo=0,yhi=1,xp=t,yp=S
+@ bound=100000,meth=cvode,toler=1e-12,atoler=1e-12
+done
